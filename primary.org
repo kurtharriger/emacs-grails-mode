@@ -1,0 +1,20 @@
+* TODO Search Paths View/Edit Mode
+** Each item is a link to open it
+** Create a buffer with all the paths. One per line.
+** When done, updates search paths
+* TODO Save settings (search paths) to some project file or list
+** '(project-name (name value name value))
+** Should use customs for this so they are automatically saved to .emacs
+* TODO Blank input should return silently. Right now it searches
+* TODO From where cursor is
+** Find class def
+** Find function def
+** Full-text search
+** File name search
+** All should be completing if more than one result is found.
+* TODO Refactor a rename:
+** Fuzzy match on word
+** Default to normal word separation plus camel-case word separation.
+** Review refactor
+** Perform refactor
+** Step through matches
