@@ -37,12 +37,12 @@
   :global t
   ;; The minor mode bindings.
   :keymap
-  '(("\C-cgd" . grails-find-domain) ; TODO
-    ("\C-cgs" . grails-find-service) ; TODO
-    ("\C-cgc" . grails-find-controller) ; TODO
-    ("\C-c\C-gd" . grails-find-domain-for-current)
-    ("\C-c\C-gs" . grails-find-service-for-current)
-    ("\C-c\C-gc" . grails-find-controller-for-current))
+  '(("\C-c[\C-gd" . grails-find-domain) ; TODO
+    ("\C-c[\C-gs" . grails-find-service) ; TODO
+    ("\C-c[\C-gc" . grails-find-controller) ; TODO
+    ("\C-c[\C-g\C-d" . grails-find-domain-for-current)
+    ("\C-c[\C-g\C-s" . grails-find-service-for-current)
+    ("\C-c[\C-g\C-c" . grails-find-controller-for-current))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
