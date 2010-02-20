@@ -6,16 +6,6 @@
 ;; Synopsis:
 ;;   Help when working with grails apps.
 ;;   * Finding files is greatly simplified (see key bindings)
-;;
-;; Usage:
-;;     (when (require 'project-mode)
-;;       (require 'grails-mode)
-;;       (let ((project (project-create "foo")))
-;;         (project-search-paths-add project "/usr/home/me/proj/foo")
-;;         (project-tags-form-set project grails-default-project-mode-tags-form)
-;;         (project-search-exclusion-regexes-set project project-search-exclusion-regexes-default)
-;;         (project-fuzzy-match-tolerance-set project project-fuzzy-match-tolerance-default)))
-
 
 (require 'project-mode)
 
