@@ -27,12 +27,13 @@
   :global t
   ;; The minor mode bindings.
   :keymap
-  '(("\C-c[\C-gd" . grails-find-domain) ; TODO
-    ("\C-c[\C-gs" . grails-find-service) ; TODO
-    ("\C-c[\C-gc" . grails-find-controller) ; TODO
-    ("\C-c[\C-g\C-d" . grails-find-domain-for-current)
-    ("\C-c[\C-g\C-s" . grails-find-service-for-current)
-    ("\C-c[\C-g\C-c" . grails-find-controller-for-current))
+  '(("\C-c[[d" . grails-find-domain) ; TODO
+    ("\C-c[[s" . grails-find-service) ; TODO
+    ("\C-c[[c" . grails-find-controller) ; TODO
+    ("\C-c[[\C-d" . grails-find-domain-for-current)
+    ("\C-c[[\C-s" . grails-find-service-for-current)
+    ("\C-c[[\C-c" . grails-find-controller-for-current)
+    ("\C-c[[\C-t" . grails-find-unit-test-for-current))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
@@ -75,9 +76,10 @@
   (interactive)
   (grails-find-service-for (buffer-name)))
 
-(defun grails-find-controller-for-current nil
+(defun grails-find-unit-test-for-current nil
   (interactive)
-  (grails-find-controller-for (buffer-name)))
+  (grails-find-unit-test-for (buffer-name)))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,7 +90,7 @@
   (let ((file-name (project-file-strip-extension file-arg))
         (ext (or (project-file-get-extension file-arg) ".groovy")))
     (let ((file-name (substring file-name 0
-                                (string-match "\\(Service\\|Controller\\)"
+                                (string-match "\\(Service\\|Controller\\|Tests?\\)"
                                               file-name))))
       (let ((file-name (concat file-name ext)))
         (message (concat "Searching for: " file-name))
@@ -98,7 +100,7 @@
   (let ((file-name (project-file-strip-extension file-arg))
         (ext (or (project-file-get-extension file-arg) ".groovy")))
     (let ((file-name (substring file-name 0
-                                (string-match "\\(Service\\|Controller\\)"
+                                (string-match "\\(Service\\|Controller\\|Tests?\\)"
                                               file-name))))
       (let ((file-name (concat file-name "Service" ext)))
         (message (concat "Searching for: " file-name))
@@ -108,11 +110,19 @@
   (let ((file-name (project-file-strip-extension file-arg))
         (ext (or (project-file-get-extension file-arg) ".groovy")))
     (let ((file-name (substring file-name 0
-                                (string-match "Service"
+                                (string-match "\\(Service\\|Controller\\|Tests?\\)"
                                               file-name))))
       (let ((file-name (concat file-name "Controller" ext)))
         (message (concat "Searching for: " file-name))
         (project-im-feeling-lucky-regex file-name)))))
+
+(defun grails-find-unit-test-for (file-arg)
+  (let ((file-name (project-file-strip-extension file-arg))
+        (ext (or (project-file-get-extension file-arg) ".groovy")))
+    (let ((file-name (concat file-name "Tests?" ext)))
+      (message (concat "Searching for: " file-name))
+      (project-im-feeling-lucky-regex file-name))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
