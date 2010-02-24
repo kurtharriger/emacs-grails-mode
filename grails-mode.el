@@ -81,6 +81,10 @@
   (interactive)
   (grails-find-controller-for (buffer-name)))
 
+(defun grails-find-unit-test-for-current nil
+  (interactive)
+  (grails-find-unit-test-for (buffer-name)))
+
 (defun grails-run-test-unit-for-current nil
   (interactive)
   (grails-run-test-unit-for (buffer-name)))
