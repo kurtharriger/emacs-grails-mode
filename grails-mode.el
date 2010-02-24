@@ -33,7 +33,8 @@
     ("\C-c[[\C-d" . grails-find-domain-for-current)
     ("\C-c[[\C-s" . grails-find-service-for-current)
     ("\C-c[[\C-c" . grails-find-controller-for-current)
-    ("\C-c[[\C-t" . grails-find-unit-test-for-current))
+    ("\C-c[[\C-t" . grails-find-unit-test-for-current)
+    ("\C-c[[tu" . grails-run-test-unit-for-current))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
@@ -80,6 +81,10 @@
   (interactive)
   (grails-find-unit-test-for (buffer-name)))
 
+(defun grails-run-test-unit-for-current nil
+  (interactive)
+  (grails-run-test-unit-for (buffer-name)))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -123,6 +128,33 @@
       (message (concat "Searching for: " file-name))
       (project-im-feeling-lucky-regex file-name))))
 
+(defun grails-run-test-unit-for (file-arg)
+  (let ((file-name (project-file-strip-extension file-arg))
+        (ext (or (project-file-get-extension file-arg) ".groovy")))
+    (let ((file-name (substring file-name 0
+                                (string-match "Tests?"
+                                              file-name)))
+          (buf (generate-new-buffer "*grails-unit-test*")))
+      (pop-to-buffer buf)
+      (cd (project-search-paths-get-default (project-current)))
+      (let ((proc (start-process-shell-command "grails-unit-test"
+                                               buf
+                                               "grails" "test-app" file-name "-unit")))
+        (set-process-filter proc (lambda (proc str) (grails-unit-test-filter proc str)))
+        (process-kill-without-query proc)))))
+
+(defun grails-unit-test-filter (proc str)
+  (save-excursion
+    (when (string-match "Tests FAILED - view reports" str)
+      (browse-url (project-append-to-path
+                   (project-search-paths-get-default (project-current))
+                   '("target" "test-reports"
+                     "html" "all-tests.html"))))
+    (when (string-match "exited abnormally with code 255" str)
+      (message (concat "Error: You're running 'grails test-app' from the wrong directory")))
+    (set-buffer (process-buffer proc))
+    (goto-char (point-max))
+    (insert (concat "\n" str))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
