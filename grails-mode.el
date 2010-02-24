@@ -27,14 +27,14 @@
   :global t
   ;; The minor mode bindings.
   :keymap
-  '(("\C-c[[d" . grails-find-domain) ; TODO
-    ("\C-c[[s" . grails-find-service) ; TODO
-    ("\C-c[[c" . grails-find-controller) ; TODO
-    ("\C-c[[\C-d" . grails-find-domain-for-current)
-    ("\C-c[[\C-s" . grails-find-service-for-current)
-    ("\C-c[[\C-c" . grails-find-controller-for-current)
-    ("\C-c[[\C-t" . grails-find-unit-test-for-current)
-    ("\C-c[[tu" . grails-run-test-unit-for-current))
+  '(("\M-+gd" . grails-find-domain) ; TODO
+    ("\M-+gs" . grails-find-service) ; TODO
+    ("\M-+gc" . grails-find-controller) ; TODO
+    ([C-f1] . grails-find-domain-for-current)
+    ([C-f2] . grails-find-service-for-current)
+    ([C-f3] . grails-find-controller-for-current)
+    ([C-f4] . grails-find-unit-test-for-current)
+    ([C-f12] . grails-run-test-unit-for-current))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
@@ -77,9 +77,9 @@
   (interactive)
   (grails-find-service-for (buffer-name)))
 
-(defun grails-find-unit-test-for-current nil
+(defun grails-find-controller-for-current nil
   (interactive)
-  (grails-find-unit-test-for (buffer-name)))
+  (grails-find-controller-for (buffer-name)))
 
 (defun grails-run-test-unit-for-current nil
   (interactive)
