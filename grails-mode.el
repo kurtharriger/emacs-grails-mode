@@ -167,6 +167,17 @@
 
 (defun grails-unit-test-filter (proc str)
   (save-excursion
+    (let ((buf (process-buffer proc)))
+      (set-buffer buf)
+      (grails-insert-unit-test-results buf)
+      (when (string-match "exited abnormally with code 255" str)
+        (message (concat "Error: You're probably running 'grails test-app' from the wrong directory")))
+      (goto-char (point-max))
+      (insert (concat "\n" str)))))
+
+(defun grails-insert-unit-test-results (buf)
+  (save-excursion
+    (set-buffer buf)
     (when (string-match "Tests \\(FAILED\\|PASSED\\) - view reports" str)
       (let ((passed-p (equal "PASSED" (match-string-no-properties 1 str))))
         (beginning-of-buffer)
@@ -185,12 +196,7 @@
           (insert-button file 'action '(lambda (but)
                                          (find-file (project-append-to-path
                                                      (grails-tests-plain-output-dir) (button-label but))))))
-        (insert "\n-----\n")))
-    (when (string-match "exited abnormally with code 255" str)
-      (message (concat "Error: You're running 'grails test-app' from the wrong directory")))
-    (set-buffer (process-buffer proc))
-    (goto-char (point-max))
-    (insert (concat "\n" str))))
+        (insert "\n-----\n")))))
 
 (defun grails-tests-html-output-dir nil
   (project-append-to-path
