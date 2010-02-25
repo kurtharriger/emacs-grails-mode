@@ -34,7 +34,8 @@
     ([C-f2] . grails-find-service-for-current)
     ([C-f3] . grails-find-controller-for-current)
     ([C-f4] . grails-find-unit-test-for-current)
-    ([C-f12] . grails-run-test-unit-for-current))
+    ([C-f12] . grails-run-test-unit-for-current)
+    ([C-f11] . grails-run-last-unit-test))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
@@ -52,6 +53,8 @@
   :group 'grails)
 
 ;;;###autoload
+
+(defvar *grails-last-unit-test* nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,9 +90,12 @@
 
 (defun grails-run-test-unit-for-current nil
   (interactive)
+  (setq *grails-last-unit-test* (buffer-name))
   (grails-run-test-unit-for (buffer-name)))
 
-
+(defun grails-run-last-unit-test nil
+  (interactive)
+  (grails-run-test-unit-for *grails-last-unit-test*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
