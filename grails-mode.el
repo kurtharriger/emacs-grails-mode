@@ -30,12 +30,13 @@
   '(("\M-+gd" . grails-find-domain) ; TODO
     ("\M-+gs" . grails-find-service) ; TODO
     ("\M-+gc" . grails-find-controller) ; TODO
-    ([C-f1] . grails-find-domain-for-current)
-    ([C-f2] . grails-find-service-for-current)
-    ([C-f3] . grails-find-controller-for-current)
-    ([C-f4] . grails-find-unit-test-for-current)
-    ([C-f12] . grails-run-test-unit-for-current)
-    ([C-f11] . grails-run-last-unit-test))
+    ([C-f6] . grails-find-domain-for-current)
+    ([C-f7] . grails-find-service-for-current)
+    ([C-f8] . grails-find-controller-for-current)
+    ;; C-f5 - consider something like grails-find-view-for-controller-action-at-point
+    ([C-f10] . grails-find-unit-test-for-current)
+    ([C-f11] . grails-run-last-unit-test)
+    ([C-f12] . grails-run-test-unit-for-current))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
@@ -95,7 +96,8 @@
 
 (defun grails-run-last-unit-test nil
   (interactive)
-  (grails-run-test-unit-for *grails-last-unit-test*))
+  (when *grails-last-unit-test*
+    (grails-run-test-unit-for *grails-last-unit-test*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -146,6 +148,7 @@
                                               file-name)))
           (buf (generate-new-buffer "*grails-unit-test*")))
       (pop-to-buffer buf)
+      (local-set-key "q" 'kill-buffer-and-window)
       (cd (project-search-paths-get-default (project-current)))
       (let ((proc (start-process-shell-command "grails-unit-test"
                                                buf
