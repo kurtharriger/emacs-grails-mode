@@ -35,8 +35,8 @@
     ([C-f8] . grails-find-controller-for-current)
     ;; C-f5 - consider something like grails-find-view-for-controller-action-at-point
     ([C-f10] . grails-find-unit-test-for-current)
-    ([C-f11] . grails-run-last-unit-test)
-    ([C-f12] . grails-run-test-unit-for-current))
+    ([C-f11] . grails-run-test-unit-for-current)
+    ([C-f12] . grails-run-last-unit-test))
   :group 'grails)
 
 (defcustom grails-default-project-mode-tags-form
@@ -53,9 +53,17 @@
   "Used to generate tags for groovy files"
   :group 'grails)
 
+(defface grails-unit-test-failed
+  '((default (:foreground "white" :background "red4" :stipple nil)))
+  "Used for when a unit test fails.")
+
+(defface grails-unit-test-passed
+  '((default (:foreground "white" :background "green4" :stipple nil)))
+  "Used for when a unit test passes.")
+
 ;;;###autoload
 
-(defvar *grails-last-unit-test* nil)
+(defvar *grails-last-unit-test-name* nil) ; TODO: This should be per project
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -91,13 +99,12 @@
 
 (defun grails-run-test-unit-for-current nil
   (interactive)
-  (setq *grails-last-unit-test* (buffer-name))
   (grails-run-test-unit-for (buffer-name)))
 
 (defun grails-run-last-unit-test nil
   (interactive)
-  (when *grails-last-unit-test*
-    (grails-run-test-unit-for *grails-last-unit-test*)))
+  (when *grails-last-unit-test-name*
+    (grails-run-test-unit-for *grails-last-unit-test-name*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -143,31 +150,66 @@
 (defun grails-run-test-unit-for (file-arg)
   (let ((file-name (project-file-strip-extension file-arg))
         (ext (or (project-file-get-extension file-arg) ".groovy")))
-    (let ((file-name (substring file-name 0
+    (let ((test-name (substring file-name 0
                                 (string-match "Tests?"
                                               file-name)))
           (buf (generate-new-buffer "*grails-unit-test*")))
+      (setq *grails-last-unit-test-name* test-name)
       (pop-to-buffer buf)
-      (local-set-key "q" 'kill-buffer-and-window)
+      (local-set-key "q" 'kill-this-buffer)
+      (local-set-key "Q" 'kill-buffer-and-window)
       (cd (project-search-paths-get-default (project-current)))
       (let ((proc (start-process-shell-command "grails-unit-test"
                                                buf
-                                               "grails" "test-app" file-name "-unit")))
+                                               "grails" "test-app" test-name "-unit")))
         (set-process-filter proc (lambda (proc str) (grails-unit-test-filter proc str)))
         (process-kill-without-query proc)))))
 
 (defun grails-unit-test-filter (proc str)
   (save-excursion
-    (when (string-match "Tests FAILED - view reports" str)
-      (browse-url (project-append-to-path
-                   (project-search-paths-get-default (project-current))
-                   '("target" "test-reports"
-                     "html" "all-tests.html"))))
+    (when (string-match "Tests \\(FAILED\\|PASSED\\) - view reports" str)
+      (let ((passed-p (equal "PASSED" (match-string-no-properties 1 str))))
+        (beginning-of-buffer)
+        (insert "\n-----\n")
+        (if passed-p
+            (insert (propertize "PASSED" 'face 'grails-unit-test-passed))
+          (insert (propertize "FAILED" 'face 'grails-unit-test-failed)))
+        (insert "\n")
+        (insert "Some output files:\n")
+        (insert-button "all-tests.html" 'action '(lambda (but)
+                                                   (browse-url (project-append-to-path
+                                                                (grails-tests-html-output-dir)
+                                                                "all-tests.html"))))
+        (dolist (file (grails-tests-list-of-plain-output-files))
+          (insert "\n")
+          (insert-button file 'action '(lambda (but)
+                                         (find-file (project-append-to-path
+                                                     (grails-tests-plain-output-dir) (button-label but))))))
+        (insert "\n-----\n")))
     (when (string-match "exited abnormally with code 255" str)
       (message (concat "Error: You're running 'grails test-app' from the wrong directory")))
     (set-buffer (process-buffer proc))
     (goto-char (point-max))
     (insert (concat "\n" str))))
+
+(defun grails-tests-html-output-dir nil
+  (project-append-to-path
+   (project-search-paths-get-default (project-current))
+   '("target" "test-reports"
+     "html")))
+
+(defun grails-tests-plain-output-dir nil
+  (project-append-to-path
+   (project-search-paths-get-default (project-current))
+   '("target" "test-reports"
+     "plain")))
+
+(defun grails-tests-list-of-plain-output-files nil
+  (let (result)
+    (dolist (file (directory-files (grails-tests-plain-output-dir)))
+      (when (not (string-match "^\\." file))
+        (setq result (append result (list file)))))
+    result))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
