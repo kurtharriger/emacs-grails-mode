@@ -170,38 +170,47 @@
         (set-process-filter proc (lambda (proc str) (grails-unit-test-filter proc str)))
         (process-kill-without-query proc)))))
 
-(defun grails-unit-test-filter (proc str)
+(defun grails-unit-test-filter (proc test-output)
   (save-excursion
     (let ((buf (process-buffer proc)))
       (set-buffer buf)
-      (grails-insert-unit-test-results buf)
-      (when (string-match "exited abnormally with code 255" str)
+      (grails-unit-test-filter-insert-unit-test-results)
+      (grails-unit-test-filter-buttonize-groovyc-errors)
+      (when (string-match "exited abnormally with code 255" test-output)
         (message (concat "Error: You're probably running 'grails test-app' from the wrong directory")))
       (goto-char (point-max))
-      (insert (concat "\n" str)))))
+      (insert (concat "\n" test-output)))))
 
-(defun grails-insert-unit-test-results (buf)
-  (save-excursion
-    (set-buffer buf)
-    (when (string-match "Tests \\(FAILED\\|PASSED\\) - view reports" str)
-      (let ((passed-p (equal "PASSED" (match-string-no-properties 1 str))))
-        (beginning-of-buffer)
-        (insert "\n-----\n")
-        (if passed-p
-            (insert (propertize "PASSED" 'face 'grails-unit-test-passed))
-          (insert (propertize "FAILED" 'face 'grails-unit-test-failed)))
+(defun grails-unit-test-filter-buttonize-groovyc-errors nil
+  "Meant to be called from `GRAILS-UNIT-TEST-FILTER'"
+  (when (string-match "\\[groovyc\\][^\r\n]+startup failed, +\\([^\r\n]+\\): +\\([0-9]+\\):" test-output)
+    (beginning-of-buffer)
+    (insert-button (concat (match-string-no-properties 1 test-output)
+                           ":"
+                           (match-string-no-properties 2 test-output))
+                   'action 'project-file-button-handler)))
+
+(defun grails-unit-test-filter-insert-unit-test-results nil
+  "Meant to be called from `GRAILS-UNIT-TEST-FILTER'"
+  (when (string-match "Tests \\(FAILED\\|PASSED\\) - view reports" test-output)
+    (let ((passed-p (equal "PASSED" (match-string-no-properties 1 test-output))))
+      (beginning-of-buffer)
+      (insert "\n-----\n")
+      (if passed-p
+          (insert (propertize "PASSED" 'face 'grails-unit-test-passed))
+        (insert (propertize "FAILED" 'face 'grails-unit-test-failed)))
+      (insert "\n")
+      (insert "Some output files:\n")
+      (insert-button "all-tests.html" 'action (lambda (but)
+                                                (browse-url (project-append-to-path
+                                                             (grails-tests-html-output-dir)
+                                                             "all-tests.html"))))
+      (dolist (file (grails-tests-list-of-plain-output-files))
         (insert "\n")
-        (insert "Some output files:\n")
-        (insert-button "all-tests.html" 'action (lambda (but)
-                                                  (browse-url (project-append-to-path
-                                                               (grails-tests-html-output-dir)
-                                                                "all-tests.html"))))
-        (dolist (file (grails-tests-list-of-plain-output-files))
-          (insert "\n")
-          (insert-button file 'action (lambda (but)
-                                        (find-file (project-append-to-path
-                                                    (grails-tests-plain-output-dir) (button-label but))))))
-        (insert "\n-----\n")))))
+        (insert-button file 'action (lambda (but)
+                                      (find-file (project-append-to-path
+                                                  (grails-tests-plain-output-dir) (button-label but))))))
+      (insert "\n-----\n"))))
 
 (defun grails-tests-html-output-dir nil
   (project-append-to-path
