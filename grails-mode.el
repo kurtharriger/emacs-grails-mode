@@ -27,9 +27,9 @@
   :global t
   ;; The minor mode bindings.
   :keymap
-  '(("\M-+gd" . grails-find-domain) ; TODO
-    ("\M-+gs" . grails-find-service) ; TODO
-    ("\M-+gc" . grails-find-controller) ; TODO
+  '(("\M-+gd" . grails-find-domain)
+    ("\M-+gs" . grails-find-service)
+    ("\M-+gc" . grails-find-controller)
     ([C-f6] . grails-find-domain-for-current)
     ([C-f7] . grails-find-service-for-current)
     ([C-f8] . grails-find-controller-for-current)
@@ -192,15 +192,15 @@
           (insert (propertize "FAILED" 'face 'grails-unit-test-failed)))
         (insert "\n")
         (insert "Some output files:\n")
-        (insert-button "all-tests.html" 'action '(lambda (but)
-                                                   (browse-url (project-append-to-path
-                                                                (grails-tests-html-output-dir)
+        (insert-button "all-tests.html" 'action (lambda (but)
+                                                  (browse-url (project-append-to-path
+                                                               (grails-tests-html-output-dir)
                                                                 "all-tests.html"))))
         (dolist (file (grails-tests-list-of-plain-output-files))
           (insert "\n")
-          (insert-button file 'action '(lambda (but)
-                                         (find-file (project-append-to-path
-                                                     (grails-tests-plain-output-dir) (button-label but))))))
+          (insert-button file 'action (lambda (but)
+                                        (find-file (project-append-to-path
+                                                    (grails-tests-plain-output-dir) (button-label but))))))
         (insert "\n-----\n")))))
 
 (defun grails-tests-html-output-dir nil
