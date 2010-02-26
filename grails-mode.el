@@ -33,7 +33,7 @@
     ([C-f6] . grails-find-domain-for-current)
     ([C-f7] . grails-find-service-for-current)
     ([C-f8] . grails-find-controller-for-current)
-    ;; C-f5 - consider something like grails-find-view-for-controller-action-at-point
+    ([C-f9] . grails-find-view-for-controller-action)
     ([C-f10] . grails-find-unit-test-for-current)
     ([C-f11] . grails-run-test-unit-for-current)
     ([C-f12] . grails-run-last-unit-test))
@@ -106,6 +106,11 @@
   (when *grails-last-unit-test-name*
     (grails-run-test-unit-for *grails-last-unit-test-name*)))
 
+(defun grails-find-view-for-controller-action nil
+  (interactive)
+  (when (string-match "Controller\\." (buffer-name))
+    (grails-find-view-for-controller-action-at-point (current-buffer))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Non-interactive functions
@@ -158,7 +163,7 @@
       (pop-to-buffer buf)
       (local-set-key "q" 'kill-this-buffer)
       (local-set-key "Q" 'kill-buffer-and-window)
-      (cd (project-search-paths-get-default (project-current)))
+      (cd (project-default-directory (project-current)))
       (let ((proc (start-process-shell-command "grails-unit-test"
                                                buf
                                                "grails" "test-app" test-name "-unit")))
@@ -200,13 +205,13 @@
 
 (defun grails-tests-html-output-dir nil
   (project-append-to-path
-   (project-search-paths-get-default (project-current))
+   (project-default-directory (project-current))
    '("target" "test-reports"
      "html")))
 
 (defun grails-tests-plain-output-dir nil
   (project-append-to-path
-   (project-search-paths-get-default (project-current))
+   (project-default-directory (project-current))
    '("target" "test-reports"
      "plain")))
 
@@ -217,6 +222,20 @@
         (setq result (append result (list file)))))
     result))
 
+(defun grails-find-view-for-controller-action-at-point (buf)
+  (save-excursion
+    (set-buffer buf)
+    (when (re-search-backward "def[ 	\n\r]+\\([a-z0-9]+\\)[ 	\n\r]*=[ 	\n\r]*{" (point-min) t)
+      (let ((action-name (match-string-no-properties 1))
+            (view-dir (downcase (substring (buffer-name) 0 (string-match "Controller\\." (buffer-name))))))
+        (let ((file-path (project-append-to-path
+                          (project-default-directory (project-current))
+                          (list "grails-app" "views"
+                                view-dir
+                                (concat action-name ".gsp")))))
+          (if (file-readable-p file-path)
+              (find-file file-path)
+            (message (concat "Grails view '" view-dir "/" action-name "' doesn't exist."))))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
