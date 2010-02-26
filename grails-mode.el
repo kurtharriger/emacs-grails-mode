@@ -188,7 +188,7 @@
     (insert-button (concat (match-string-no-properties 1 test-output)
                            ":"
                            (match-string-no-properties 2 test-output))
-                   'action 'project-file-button-handler)))
+                   'action 'project-file-line-button-handler)))
 
 (defun grails-unit-test-filter-insert-unit-test-results nil
   "Meant to be called from `GRAILS-UNIT-TEST-FILTER'"
