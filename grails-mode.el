@@ -39,19 +39,17 @@
     ([C-f12] . grails-run-last-unit-test))
   :group 'grails)
 
-(defcustom grails-default-project-mode-tags-form
-  '(;; File name pattern
+(setq project-tags-form-default
+  `(;; File name pattern
     "\\.groovy$"
     ;; Regexes that are run for the file name match
     (;; classes
      "^class\s+\\w+"
      ;; members
-     "^\\(\s\\{4\\}\\|\t\\)\\w+\s+\\w+[^\r\n$({=]+[({=]?"
+     ,(concat "^\\(\s\\{" (number-to-string tab-width) "\\}\\|\t\\)\\w+\s+\\w+[^\r\n$({=]+[({=]?")
      ;; closures defined in method bodies
-     "^\\(\s\\{8\\}\\|\t\t\\)\\w+\\.\\w+\s*=\s*{"
-     ))
-  "Used to generate tags for groovy files"
-  :group 'grails)
+     ,(concat "^\\(\s\\{" (number-to-string (* 2 tab-width)) "\\}\\|\t\t\\)\\w+\\.\\w+\s*=\s*{")
+     )))
 
 (defface grails-unit-test-failed
   '((default (:foreground "white" :background "red4" :stipple nil)))
