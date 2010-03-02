@@ -28,16 +28,27 @@
   ;; The minor mode bindings.
   :keymap
   '(("\M-+gd" . grails-find-domain)
-    ("\M-+gs" . grails-find-service)
     ("\M-+gc" . grails-find-controller)
+    ("\M-+gs" . grails-find-service)
     ([C-f6] . grails-find-domain-for-current)
-    ([C-f7] . grails-find-service-for-current)
-    ([C-f8] . grails-find-controller-for-current)
-    ([C-f9] . grails-find-view-for-controller-action)
+    ([C-f7] . grails-find-controller-for-current)
+    ([C-f8] . grails-find-view-for-controller-action)
+    ([C-f9] . grails-find-service-for-current)
     ([C-f10] . grails-find-unit-test-for-current)
     ([C-f11] . grails-run-test-unit-for-current)
     ([C-f12] . grails-run-last-unit-test))
   :group 'grails)
+
+(defface grails-unit-test-failed
+  '((default (:foreground "white" :background "red4" :stipple nil)))
+  "Used for when a unit test fails.")
+
+(defface grails-unit-test-passed
+  '((default (:foreground "white" :background "green4" :stipple nil)))
+  "Used for when a unit test passes.")
+
+;;;###autoload
+
 
 (setq project-tags-form-default
   `(;; File name pattern
@@ -51,15 +62,7 @@
      ,(concat "^\\(\s\\{" (number-to-string (* 2 tab-width)) "\\}\\|\t\t\\)\\w+\\.\\w+\s*=\s*{")
      )))
 
-(defface grails-unit-test-failed
-  '((default (:foreground "white" :background "red4" :stipple nil)))
-  "Used for when a unit test fails.")
-
-(defface grails-unit-test-passed
-  '((default (:foreground "white" :background "green4" :stipple nil)))
-  "Used for when a unit test passes.")
-
-;;;###autoload
+(setq project-menu-string "Grails")
 
 (defvar *grails-last-unit-test-name* nil) ; TODO: This should be per project
 
@@ -243,6 +246,74 @@
           (if (file-readable-p file-path)
               (find-file file-path)
             (message (concat "Grails view '" view-dir "/" action-name "' doesn't exist."))))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Menu
+;; Refresh
+(defun grails-display-menu nil
+  (interactive)
+  (project-display-menu)
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop]
+    (cons "Grails Shortcuts" (make-sparse-keymap)))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop svc]
+    '("Find Service" . grails-find-service))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop contr]
+    '("Find Controller" . grails-find-controller))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop domain]
+    '("Find Domain" . grails-find-domain))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop runpunit]
+    '("Run Last Unit Test" . grails-run-last-unit-test))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop rununit4c]
+    '("Run Unit Test For Current" . grails-run-test-unit-for-current))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop unit4c]
+    '("Find Unit Test For Current" . grails-find-unit-test-for-current))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop svc4c]
+    '("Find Service For Current" . grails-find-service-for-current))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop view4action]
+    '("Find View For Action" . grails-find-view-for-controller-action))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop contr4c]
+    '("Find Controller For Current" . grails-find-controller-for-current))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop domain4c]
+    '("Find Domain For Current" . grails-find-domain-for-current))
+
+  nil)
+
+(defun grails-remove-menu nil
+  (interactive)
+  (project-remove-menu))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
