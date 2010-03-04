@@ -211,7 +211,9 @@
         (insert "\n")
         (insert-button file 'action (lambda (but)
                                       (find-file (project-append-to-path
-                                                  (grails-tests-plain-output-dir) (button-label but))))))
+                                                  (grails-tests-plain-output-dir) (button-label but)))))
+        (when (and (string-match "Tests\\.txt$" file))
+          (insert-file (project-append-to-path (grails-tests-plain-output-dir) file))))
       (insert "\n-----\n"))))
 
 (defun grails-tests-html-output-dir nil
