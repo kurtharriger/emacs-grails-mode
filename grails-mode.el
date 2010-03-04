@@ -250,26 +250,28 @@
 
 (defun grails-find-file-for-stacktrace-line nil
   (interactive)
-  (let ((original-point (point))
-        (bound (progn
-                 (end-of-line)
-                 (point)))
+  (let ((bound (progn
+                 (save-excursion
+                   (end-of-line)
+                   (point))))
         line-num
         file-name)
-    (setq line-num (progn
-                     (beginning-of-line)
-                     (if (re-search-forward ":\\([0-9]+\\)" bound t)
-                         (string-to-number (match-string-no-properties 1))
-                       0)))
-    (setq file-name (progn
-                      (beginning-of-line)
-                      (when (re-search-forward "(\\(.*+?\\)[:)]" bound t)
-                        (match-string-no-properties 1))))
-    (message (concat "Opening: " file-name ":" (number-to-string line-num)))
+    (save-excursion
+      (setq line-num (progn
+                       (beginning-of-line)
+                       (if (re-search-forward ":\\([0-9]+\\)" bound t)
+                           (string-to-number (match-string-no-properties 1))
+                         0)))
+      (setq file-name (progn
+                        (beginning-of-line)
+                        (when (re-search-forward "(\\(.*+?\\)[:)]" bound t)
+                          (match-string-no-properties 1)))))
     (when file-name
       (let ((matches (project-search-exact (project-current) file-name)))
-        (find-file (car matches))
-        (goto-line line-num)))))
+        (when (file-readable-p (car matches))
+          (message (concat "Found: " (car matches) ":" (number-to-string line-num)))
+          (find-file (car matches))
+          (goto-line line-num))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Menu
