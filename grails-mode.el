@@ -30,6 +30,7 @@
   '(("\M-+gd" . grails-find-domain)
     ("\M-+gc" . grails-find-controller)
     ("\M-+gs" . grails-find-service)
+    ("\M-+gf" . grails-find-file-for-stacktrace-line)
     ([C-f6] . grails-find-domain-for-current)
     ([C-f7] . grails-find-controller-for-current)
     ([C-f8] . grails-find-view-for-controller-action)
@@ -246,6 +247,30 @@
           (if (file-readable-p file-path)
               (find-file file-path)
             (message (concat "Grails view '" view-dir "/" action-name "' doesn't exist."))))))))
+
+(defun grails-find-file-for-stacktrace-line nil
+  (interactive)
+  (let ((original-point (point))
+        (bound (progn
+                 (end-of-line)
+                 (point)))
+        line-num
+        file-name)
+    (setq line-num (progn
+                     (beginning-of-line)
+                     (if (re-search-forward ":\\([0-9]+\\)" bound t)
+                         (string-to-number (match-string-no-properties 1))
+                       0)))
+    (setq file-name (progn
+                      (beginning-of-line)
+                      (when (re-search-forward "(\\(.*+?\\)[:)]" bound t)
+                        (match-string-no-properties 1))))
+    (message (concat "Opening: " file-name ":" (number-to-string line-num)))
+    (when file-name
+      (let ((matches (project-search-exact (project-current) file-name)))
+        (find-file (car matches))
+        (goto-line line-num)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Menu
 ;; Refresh
@@ -257,6 +282,11 @@
     global-map
     [menu-bar projmenu hop]
     (cons "Grails Shortcuts" (make-sparse-keymap)))
+
+  (define-key
+    global-map
+    [menu-bar projmenu hop ofjst]
+    '("Find File For Stack-trace Line" . grails-find-file-for-stacktrace-line))
 
   (define-key
     global-map
