@@ -271,7 +271,10 @@
         (when (file-readable-p (car matches))
           (message (concat "Found: " (car matches) ":" (number-to-string line-num)))
           (find-file (car matches))
-          (goto-line line-num))))))
+          (goto-line line-num)
+          (beginning-of-line)
+          (push-mark (point) t t)
+          (end-of-line))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Menu
