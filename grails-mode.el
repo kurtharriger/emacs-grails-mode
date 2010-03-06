@@ -48,6 +48,11 @@
   '((default (:foreground "white" :background "green4" :stipple nil)))
   "Used for when a unit test passes.")
 
+;;; Hooks
+(add-hook 'grails-mode-hook 'grails-mode-menu)
+(add-hook 'emacs-startup-hook (lambda nil (run-hooks 'grails-mode-hook)))
+
+
 ;;;###autoload
 
 
@@ -62,8 +67,6 @@
      ;; closures defined in method bodies
      ,(concat "^\\(\s\\{" (number-to-string (* 2 tab-width)) "\\}\\|\t\t\\)\\w+\\.\\w+\s*=\s*{")
      )))
-
-(setq project-menu-string "Grails")
 
 (defvar *grails-last-unit-test-name* nil) ; TODO: This should be per project
 
@@ -281,78 +284,78 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Menu
 ;; Refresh
-(defun grails-display-menu nil
+(defun grails-mode-menu nil
   (interactive)
-  (project-display-menu)
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop]
-    (cons "Grails Shortcuts" (make-sparse-keymap)))
+  (if grails-mode
+      (progn
+        (define-key-after
+          global-map
+          [menu-bar grailmenu]
+          (cons "Grails" (make-sparse-keymap))
+          'tools)
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop ofjst]
-    '("Find File For Stack-trace Line" . grails-find-file-for-stacktrace-line))
+        (define-key
+          global-map
+          [menu-bar grailmenu ofjst]
+          '("Find File For Stack-trace Line" . grails-find-file-for-stacktrace-line))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop svc]
-    '("Find Service" . grails-find-service))
+        (define-key
+          global-map
+          [menu-bar grailmenu svc]
+          '("Find Service" . grails-find-service))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop contr]
-    '("Find Controller" . grails-find-controller))
+        (define-key
+          global-map
+          [menu-bar grailmenu contr]
+          '("Find Controller" . grails-find-controller))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop domain]
-    '("Find Domain" . grails-find-domain))
+        (define-key
+          global-map
+          [menu-bar grailmenu domain]
+          '("Find Domain" . grails-find-domain))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop runpunit]
-    '("Run Last Unit Test" . grails-run-last-unit-test))
+        (define-key
+          global-map
+          [menu-bar grailmenu runpunit]
+          '("Run Last Unit Test" . grails-run-last-unit-test))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop rununit4c]
-    '("Run Unit Test For Current" . grails-run-test-unit-for-current))
+        (define-key
+          global-map
+          [menu-bar grailmenu rununit4c]
+          '("Run Unit Test For Current" . grails-run-test-unit-for-current))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop unit4c]
-    '("Find Unit Test For Current" . grails-find-unit-test-for-current))
+        (define-key
+          global-map
+          [menu-bar grailmenu unit4c]
+          '("Find Unit Test For Current" . grails-find-unit-test-for-current))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop svc4c]
-    '("Find Service For Current" . grails-find-service-for-current))
+        (define-key
+          global-map
+          [menu-bar grailmenu svc4c]
+          '("Find Service For Current" . grails-find-service-for-current))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop view4action]
-    '("Find View For Action" . grails-find-view-for-controller-action))
+        (define-key
+          global-map
+          [menu-bar grailmenu view4action]
+          '("Find View For Action" . grails-find-view-for-controller-action))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop contr4c]
-    '("Find Controller For Current" . grails-find-controller-for-current))
+        (define-key
+          global-map
+          [menu-bar grailmenu contr4c]
+          '("Find Controller For Current" . grails-find-controller-for-current))
 
-  (define-key
-    global-map
-    [menu-bar projmenu hop domain4c]
-    '("Find Domain For Current" . grails-find-domain-for-current))
+        (define-key
+          global-map
+          [menu-bar grailmenu domain4c]
+          '("Find Domain For Current" . grails-find-domain-for-current)))
+    (progn
+      (global-unset-key [menu-bar grailmenu])))
 
   nil)
 
-(defun grails-remove-menu nil
-  (interactive)
-  (project-remove-menu))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(provide 'grails-mode)
+  (provide 'grails-mode)
