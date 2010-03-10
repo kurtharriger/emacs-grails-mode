@@ -335,7 +335,7 @@
         (define-key
           global-map
           [menu-bar grailmenu runinteg4c]
-          '("Run Unit Test For Current" . grails-run-integration-test-for-current))
+          '("Run Integration Test For Current" . grails-run-integration-test-for-current))
 
         (define-key
           global-map
