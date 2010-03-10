@@ -120,7 +120,7 @@
 (defun grails-run-last-test nil
   (interactive)
   (when (and *grails-last-test-name* *grails-last-test-type*)
-    (grails-run-test-for *grails-last-test-name*)))
+    (grails-run-test-for *grails-last-test-name* *grails-last-test-type*)))
 
 (defun grails-find-view-for-controller-action nil
   (interactive)
