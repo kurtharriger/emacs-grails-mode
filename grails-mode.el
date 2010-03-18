@@ -6,6 +6,11 @@
 ;; Synopsis:
 ;;   Help when working with grails apps.
 ;;   * Finding files is greatly simplified (see key bindings)
+;;
+;; TODO:
+;; - Lots of logic queues off of buffer name, but if buffer name is different
+;;   because, perhaps, the user has the full path of the file as the buffer name
+;;   then lots of code might fail.
 
 (require 'project-mode)
 
