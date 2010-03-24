@@ -209,9 +209,10 @@
     (let ((test-name (substring file-name 0
                                 (string-match "Tests?"
                                               file-name)))
-          (buf (generate-new-buffer (concat "*" unit-or-integration "-test-" (project-current-name) "*"))))
+          (buf (get-buffer-create (concat "*" unit-or-integration "-test-" (project-current-name) "*"))))
       (grails-project-set-last-test unit-or-integration test-name)
       (pop-to-buffer buf)
+      (kill-region (point-min) (point-max))
       (local-set-key "q" 'kill-this-buffer)
       (local-set-key "Q" 'kill-buffer-and-window)
       (cd (project-default-directory (project-current)))
