@@ -123,14 +123,16 @@
   (interactive)
   (project-ensure-current)
   (if (grails-find-unit-test-for-current)
-      (grails-run-test-for (project-buffer-name-without-<x>) "unit")
+      (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
+                           (project-buffer-name-without-<x>) "unit")
     (message (concat "Not unit test found based on current buffer name."))))
 
 (defun grails-run-integration-test-for-current nil
   (interactive)
   (project-ensure-current)
   (if (grails-find-integration-test-for-current)
-      (grails-run-test-for (project-buffer-name-without-<x>) "integration"))
+      (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
+                           (project-buffer-name-without-<x>) "integration"))
   (message (concat "Not integration test found based on current buffer name.")))
 
 (defun grails-run-last-test nil
@@ -138,7 +140,8 @@
   (project-ensure-current)
   (let ((last-test (grails-project-get-last-test)))
     (if (= 2 (length last-test))
-        (grails-run-test-for (second last-test) (first last-test))
+        (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
+                             (second last-test) (first last-test))
       (message (concat "There was no previous test run for project `" (project-current-name) "'")))))
 
 (defun grails-find-view-for-controller-action nil
@@ -150,6 +153,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Non-interactive functions
+
+
+(defun grails-app-base-dir-for-current (file-arg)
+  (substring file-arg 0 (string-match "[/\\\\]\\(test\\|grails-app\\)[/\\\\]" file-arg)))
 
 (defun grails-project-set-last-test (unit-or-integration test-name)
   (project-put (project-current) 'grails-last-test (list unit-or-integration test-name)))
@@ -203,7 +210,7 @@
             (setq ret-val t)))))
     ret-val))
 
-(defun grails-run-test-for (file-arg unit-or-integration)
+(defun grails-run-test-for (base-dir file-arg unit-or-integration)
   (let ((file-name (project-file-strip-extension file-arg))
         (ext (or (project-file-get-extension file-arg) ".groovy")))
     (let ((test-name (substring file-name 0
@@ -215,7 +222,7 @@
       (kill-region (point-min) (point-max))
       (local-set-key "q" 'kill-this-buffer)
       (local-set-key "Q" 'kill-buffer-and-window)
-      (cd (project-default-directory (project-current)))
+      (cd base-dir)
       (let ((proc (start-process-shell-command (concat unit-or-integration "-test-" (project-current-name))
                                                buf
                                                "grails" "test-app" test-name (concat "-" unit-or-integration))))
