@@ -327,7 +327,7 @@
             (setq matches (append matches (list file)))))
         (when (and matches (file-readable-p (car matches)))
           (message (concat "Found: " (car matches) ":" (number-to-string line-num)))
-          (find-file (car matches))
+          (find-file-other-frame (car matches))
           (goto-line line-num)
           (beginning-of-line)
           (push-mark (point) t t)
