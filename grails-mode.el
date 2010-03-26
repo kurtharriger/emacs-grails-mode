@@ -323,7 +323,7 @@
         (dolist (file (project-path-cache-get (project-current)))
           (when (and (or (not (string-match "Tests?\\.groovy$" file))
                          (string-match (car (grails-project-get-last-test)) file))
-                     (string-match file-name file))
+                     (string-match (concat "[/\\\\]" file-name) file))
             (setq matches (append matches (list file)))))
         (when (and matches (file-readable-p (car matches)))
           (message (concat "Found: " (car matches) ":" (number-to-string line-num)))
