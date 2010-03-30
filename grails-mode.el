@@ -36,7 +36,6 @@
     ("\M-+gc" . grails-find-controller)
     ("\M-+gs" . grails-find-service)
     ("\M-+gf" . grails-find-file-for-stacktrace-line)
-    ("\M-+gvb" . grails-svn-blame)
     ([C-f6] . grails-find-domain-for-current)
     ([C-f7] . grails-find-controller-for-current)
     ([C-f8] . grails-find-view-for-controller-action)
@@ -150,10 +149,6 @@
   (project-ensure-current)
   (when (string-match "Controller\\." (project-buffer-name-without-<x>))
     (grails-find-view-for-controller-action-at-point (current-buffer))))
-
-(defun grails-svn-blame nil
-  (interactive)
-  (shell-command (concat "svn blame " (buffer-file-name)) (get-buffer-create "*grails-svn-blame*")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
