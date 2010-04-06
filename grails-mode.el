@@ -125,15 +125,15 @@
   (if (grails-find-unit-test-for-current)
       (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
                            (project-buffer-name-without-<x>) "unit")
-    (message (concat "Not unit test found based on current buffer name."))))
+    (message (concat "No unit test found based on current buffer name."))))
 
 (defun grails-run-integration-test-for-current nil
   (interactive)
   (project-ensure-current)
   (if (grails-find-integration-test-for-current)
       (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
-                           (project-buffer-name-without-<x>) "integration"))
-  (message (concat "Not integration test found based on current buffer name.")))
+                           (project-buffer-name-without-<x>) "integration")
+    (message (concat "No integration test found based on current buffer name."))))
 
 (defun grails-run-last-test nil
   (interactive)
@@ -203,7 +203,7 @@
       (let ((file-arg (project-file-strip-extension file-arg)))
         (when (and (string-match file-arg file)
                    (string-match unit-or-integration file)
-                   (string-match "Tests?\\.groovy" file))
+                   (string-match "Tests?\\.groovy$" file))
           (if (not (find-file file))
               (progn
                 (message (concat "File `" file "' doesn't exist.")))
@@ -227,7 +227,8 @@
                                                buf
                                                "grails" "test-app" test-name (concat "-" unit-or-integration))))
         (set-process-filter proc (lambda (proc str) (grails-test-filter proc str)))
-        (process-kill-without-query proc)))))
+        (process-kill-without-query proc)
+        (message (concat "Running " unit-or-integration " test for " test-name))))))
 
 (defun grails-test-filter (proc test-output)
   (save-excursion
