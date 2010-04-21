@@ -142,8 +142,7 @@
   (project-ensure-current)
   (let ((last-test (grails-project-get-last-test)))
     (if (= 3 (length last-test))
-        (grails-run-test-for (third last-test)
-                             (second last-test) (first last-test) t)
+        (grails-run-test-for (third last-test) (second last-test) (first last-test) t)
       (message (concat "There was no previous test run for project `" (project-current-name) "'")))))
 
 (defun grails-find-view-for-controller-action nil
@@ -199,9 +198,9 @@
         (return file)))))
 
 (defun grails-run-test-for (base-dir file-arg test-phase rerun-p)
+  (grails-project-set-last-test test-phase file-arg base-dir)
   (let ((test-name (grails-test-name-for-file (grails-find-test-file-for file-arg test-phase))))
     (let ((buf (get-buffer-create (concat "*" test-phase "-test-" (project-current-name) "*"))))
-      (grails-project-set-last-test test-phase test-name base-dir)
       (pop-to-buffer buf)
       (kill-region (point-min) (point-max))
       (local-set-key "q" 'kill-this-buffer)
