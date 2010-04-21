@@ -44,7 +44,7 @@
     ([C-M-f10] . grails-find-integration-test-for-current)
     ([C-f11] . grails-run-unit-test-for-current)
     ([C-M-f11] . grails-run-integration-test-for-current)
-    ([C-f12] . grails-run-last-test))
+    ([C-f12] . grails-rerun-last-test))
   :group 'grails)
 
 (defface grails-test-failed
@@ -97,51 +97,53 @@
 (defun grails-find-domain-for-current nil
   (interactive)
   (project-ensure-current)
-  (grails-find-domain-for (project-buffer-name-without-<x>)))
+  (grails-find-domain-for (buffer-file-name)))
 
 (defun grails-find-service-for-current nil
   (interactive)
   (project-ensure-current)
-  (grails-find-service-for (project-buffer-name-without-<x>)))
+  (grails-find-service-for (buffer-file-name)))
 
 (defun grails-find-controller-for-current nil
   (interactive)
   (project-ensure-current)
-  (grails-find-controller-for (project-buffer-name-without-<x>)))
+  (grails-find-controller-for (buffer-file-name)))
 
 (defun grails-find-unit-test-for-current nil
   (interactive)
   (project-ensure-current)
-  (grails-find-test-for (project-buffer-name-without-<x>) "unit"))
+  (let ((file (grails-find-test-file-for (buffer-file-name) "unit")))
+    (if file
+        (find-file file)
+      (message (concat "Could not find unit test for: " (buffer-file-name))))))
 
 (defun grails-find-integration-test-for-current nil
   (interactive)
   (project-ensure-current)
-  (grails-find-test-for (project-buffer-name-without-<x>) "integration"))
+  (let ((file (grails-find-test-file-for (buffer-file-name) "integration")))
+    (if file
+        (find-file file)
+      (message (concat "Could not find unit test for: " (buffer-file-name))))))
 
 (defun grails-run-unit-test-for-current nil
   (interactive)
   (project-ensure-current)
-  (if (grails-find-unit-test-for-current)
-      (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
-                           (project-buffer-name-without-<x>) "unit")
-    (message (concat "No unit test found based on current buffer name."))))
+  (grails-run-test-for (grails-app-base-dir-for-file (buffer-file-name))
+                       (buffer-file-name) "unit" nil))
 
 (defun grails-run-integration-test-for-current nil
   (interactive)
   (project-ensure-current)
-  (if (grails-find-integration-test-for-current)
-      (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
-                           (project-buffer-name-without-<x>) "integration")
-    (message (concat "No integration test found based on current buffer name."))))
+  (grails-run-test-for (grails-app-base-dir-for-file (buffer-file-name))
+                       (buffer-file-name) "integration" nil))
 
-(defun grails-run-last-test nil
+(defun grails-rerun-last-test nil
   (interactive)
   (project-ensure-current)
   (let ((last-test (grails-project-get-last-test)))
-    (if (= 2 (length last-test))
-        (grails-run-test-for (grails-app-base-dir-for-current (buffer-file-name))
-                             (second last-test) (first last-test))
+    (if (= 3 (length last-test))
+        (grails-run-test-for (third last-test)
+                             (second last-test) (first last-test) t)
       (message (concat "There was no previous test run for project `" (project-current-name) "'")))))
 
 (defun grails-find-view-for-controller-action nil
@@ -154,81 +156,63 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Non-interactive functions
 
-
-(defun grails-app-base-dir-for-current (file-arg)
-  (substring file-arg 0 (string-match "[/\\\\]\\(test\\|grails-app\\|src\\|lib\\)[/\\\\]" file-arg)))
-
-(defun grails-project-set-last-test (unit-or-integration test-name)
-  (project-put (project-current) 'grails-last-test (list unit-or-integration test-name)))
+(defun grails-project-set-last-test (test-phase test-name base-dir)
+  (project-put (project-current) 'grails-last-test (list test-phase test-name base-dir)))
 
 (defun grails-project-get-last-test nil
   (project-get (project-current) 'grails-last-test))
 
+(defun grails-test-name-for-file (file-name)
+  (project-file-basename (substring file-name 0 (string-match "Tests?\\." file-name))))
+
+(defun grails-core-name-for-file (file-name)
+  (project-file-basename
+   (substring file-name 0
+              (string-match "\\(Service\\.groovy\\|Controller\\.groovy\\|UnitTests?\\.groovy\\|IntegrationTests?\\.groovy\\|Tests?\\.groovy\\|\\.groovy\\)"
+                            file-name))))
+
 (defun grails-find-domain-for (file-arg)
-  (let ((file-name (project-file-strip-extension file-arg))
-        (ext (or (project-file-get-extension file-arg) ".groovy")))
-    (let ((file-name (substring file-name 0
-                                (string-match "\\(Service\\|Controller\\|Tests?\\)"
-                                              file-name))))
-      (let ((file-name (concat file-name ext)))
-        (message (concat "Searching for: " file-name))
-        (when (not (project-im-feeling-lucky-regex file-name))
-          (message (concat "File `" file-name "' doesn't exist.")))))))
+  (let ((file-name (concat (grails-core-name-for-file file-arg) ".groovy")))
+    (if (not (project-exact-search file-name))
+        (message (concat "Domain model '" file-name "' doesn't exist."))
+      (message (concat "Found domain model: " file-name)))))
 
 (defun grails-find-service-for (file-arg)
-  (let ((file-name (project-file-strip-extension file-arg))
-        (ext (or (project-file-get-extension file-arg) ".groovy")))
-    (let ((file-name (substring file-name 0
-                                (string-match "\\(Service\\|Controller\\|Tests?\\)"
-                                              file-name))))
-      (let ((file-name (concat file-name "Service" ext)))
-        (message (concat "Searching for: " file-name))
-        (when (not (project-im-feeling-lucky-regex file-name))
-          (message (concat "File `" file-name "' doesn't exist.")))))))
+  (let ((file-name (concat (grails-core-name-for-file file-arg) "Service.groovy")))
+    (if (not (project-exact-search file-name))
+        (message (concat "Service '" file-name "' doesn't exist."))
+      (message (concat "Found service: " file-name)))))
 
 (defun grails-find-controller-for (file-arg)
-  (let ((file-name (project-file-strip-extension file-arg))
-        (ext (or (project-file-get-extension file-arg) ".groovy")))
-    (let ((file-name (substring file-name 0
-                                (string-match "\\(Service\\|Controller\\|Tests?\\)"
-                                              file-name))))
-      (let ((file-name (concat file-name "Controller" ext)))
-        (message (concat "Searching for: " file-name))
-        (when (not (project-im-feeling-lucky-regex file-name))
-          (message (concat "File `" file-name "' doesn't exist.")))))))
+  (let ((file-name (concat (grails-core-name-for-file file-arg) "Controller.groovy")))
+    (if (not (project-exact-search file-name))
+        (message (concat "Controller '" file-name "' doesn't exist."))
+      (message (concat "Found controller: " file-name)))))
 
-(defun grails-find-test-for (file-arg unit-or-integration)
-  (let (ret-val)
+(defun grails-find-test-file-for (file-arg test-phase)
+  (let ((core-name (grails-core-name-for-file file-arg)))
     (dolist (file (project-path-cache-get (project-current)))
-      (let ((file-arg (project-file-strip-extension file-arg)))
-        (when (and (string-match file-arg file)
-                   (string-match unit-or-integration file)
-                   (string-match "Tests?\\.groovy$" file))
-          (if (not (find-file file))
-              (progn
-                (message (concat "File `" file "' doesn't exist.")))
-            (setq ret-val t)))))
-    ret-val))
+      (when (and (string-equal core-name (grails-core-name-for-file file))
+                 (project-dir-in-file-path-p file test-phase))
+        (message (concat "Found " test-phase " test file '" (project-file-basename file)
+                         "' for '" (project-file-basename file-arg) "'"))
+        (return file)))))
 
-(defun grails-run-test-for (base-dir file-arg unit-or-integration)
-  (let ((file-name (project-file-strip-extension file-arg))
-        (ext (or (project-file-get-extension file-arg) ".groovy")))
-    (let ((test-name (substring file-name 0
-                                (string-match "Tests?"
-                                              file-name)))
-          (buf (get-buffer-create (concat "*" unit-or-integration "-test-" (project-current-name) "*"))))
-      (grails-project-set-last-test unit-or-integration test-name)
+(defun grails-run-test-for (base-dir file-arg test-phase rerun-p)
+  (let ((test-name (grails-test-name-for-file (grails-find-test-file-for file-arg test-phase))))
+    (let ((buf (get-buffer-create (concat "*" test-phase "-test-" (project-current-name) "*"))))
+      (grails-project-set-last-test test-phase test-name base-dir)
       (pop-to-buffer buf)
       (kill-region (point-min) (point-max))
       (local-set-key "q" 'kill-this-buffer)
       (local-set-key "Q" 'kill-buffer-and-window)
       (cd base-dir)
-      (let ((proc (start-process-shell-command (concat unit-or-integration "-test-" (project-current-name))
+      (let ((proc (start-process-shell-command (concat test-phase "-test-" (project-current-name))
                                                buf
-                                               "grails" "test-app" test-name (concat "-" unit-or-integration))))
+                                               "grails" "test-app" test-name (concat "-" test-phase) (when rerun-p "-rerun"))))
         (set-process-filter proc (lambda (proc str) (grails-test-filter proc str)))
         (process-kill-without-query proc)
-        (message (concat "Running " unit-or-integration " test for " test-name))))))
+        (message (concat "Running " test-phase " test: '" test-name "'"))))))
 
 (defun grails-test-filter (proc test-output)
   (save-excursion
@@ -274,21 +258,30 @@
           (insert-file (project-append-to-path (grails-tests-plain-output-dir) file))))
       (insert "\n-----\n"))))
 
+(defun grails-app-base-dir-for-file (file)
+  (let ((parts (split-string file "[/\\\\]")))
+    (block nil
+      (while (setq parts (butlast parts))
+        (let ((dir (concat (mapconcat 'identity parts "/") "/grails-app")))
+          (when (file-exists-p dir)
+            (return (mapconcat 'identity parts "/"))))))))
+
 (defun grails-tests-html-output-dir nil
   (project-append-to-path
-   (project-default-directory (project-current))
+   (grails-app-base-dir-for-file default-directory)
    '("target" "test-reports"
      "html")))
 
 (defun grails-tests-plain-output-dir nil
   (project-append-to-path
-   (project-default-directory (project-current))
+   (grails-app-base-dir-for-file default-directory)
    '("target" "test-reports"
      "plain")))
 
 (defun grails-tests-list-of-plain-output-files nil
   (let (result)
     (dolist (file (directory-files (grails-tests-plain-output-dir)))
+      (message file)
       (when (not (string-match "^\\." file))
         (setq result (append result (list file)))))
     result))
@@ -300,7 +293,7 @@
       (let ((action-name (match-string-no-properties 1))
             (view-dir (downcase (substring (buffer-name) 0 (string-match "Controller\\." (buffer-name))))))
         (let ((file-path (project-append-to-path
-                          (project-default-directory (project-current))
+                          (grails-app-base-dir-for-file (buffer-file-name buf))
                           (list "grails-app" "views"
                                 view-dir
                                 (concat action-name ".gsp")))))
@@ -376,8 +369,8 @@
 
         (define-key
           global-map
-          [menu-bar grailmenu runlasttest]
-          '("Run Last Test" . grails-run-last-test))
+          [menu-bar grailmenu reruntest]
+          '("Rerun Last Test" . grails-rerun-last-test))
 
         (define-key
           global-map
