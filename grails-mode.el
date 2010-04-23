@@ -140,9 +140,12 @@
 (defun grails-rerun-last-test nil
   (interactive)
   (project-ensure-current)
-  (let ((last-test (grails-project-get-last-test)))
-    (if (= 3 (length last-test))
-        (grails-run-test-for (third last-test) (second last-test) (first last-test) t)
+  (let ((args (grails-project-get-last-test)))
+    (if (> (length args) 0)
+        (grails-run-test-for (second (assoc :base-dir args))
+                             (second (assoc :file args))
+                             (second (assoc :test-phase args))
+                             t)
       (message (concat "There was no previous test run for project `" (project-current-name) "'")))))
 
 (defun grails-find-view-for-controller-action nil
@@ -155,8 +158,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Non-interactive functions
 
-(defun grails-project-set-last-test (test-phase test-name base-dir)
-  (project-put (project-current) 'grails-last-test (list test-phase test-name base-dir)))
+(defun* grails-project-set-last-test (&key base-dir file test-phase)
+  (project-put (project-current) 'grails-last-test (list (list :base-dir base-dir)
+                                                         (list :file file)
+                                                         (list :test-phase test-phase))))
 
 (defun grails-project-get-last-test nil
   (project-get (project-current) 'grails-last-test))
@@ -198,7 +203,9 @@
         (return file)))))
 
 (defun grails-run-test-for (base-dir file-arg test-phase rerun-p)
-  (grails-project-set-last-test test-phase file-arg base-dir)
+  (grails-project-set-last-test :base-dir base-dir
+                                :file file-arg
+                                :test-phase test-phase)
   (let ((test-name (grails-test-name-for-file (grails-find-test-file-for file-arg test-phase))))
     (let ((buf (get-buffer-create (concat "*" test-phase "-test-" (project-current-name) "*"))))
       (pop-to-buffer buf)
@@ -267,15 +274,13 @@
 
 (defun grails-tests-html-output-dir nil
   (project-append-to-path
-   (grails-app-base-dir-for-file default-directory)
-   '("target" "test-reports"
-     "html")))
+   (second (assoc :base-dir (grails-project-get-last-test)))
+   '("target" "test-reports" "html")))
 
 (defun grails-tests-plain-output-dir nil
   (project-append-to-path
-   (grails-app-base-dir-for-file default-directory)
-   '("target" "test-reports"
-     "plain")))
+   (second (assoc :base-dir (grails-project-get-last-test)))
+   '("target" "test-reports" "plain")))
 
 (defun grails-tests-list-of-plain-output-files nil
   (let (result)
@@ -322,7 +327,7 @@
       (let (matches)
         (dolist (file (project-path-cache-get (project-current)))
           (when (and (or (not (string-match "Tests?\\.groovy$" file))
-                         (string-match (car (grails-project-get-last-test)) file))
+                         (equal (second (assoc :file (grails-project-get-last-test)) file)))
                      (string-match (concat "[/\\\\]" file-name) file))
             (setq matches (append matches (list file)))))
         (when (and matches (file-readable-p (car matches)))
