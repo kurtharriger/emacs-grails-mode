@@ -44,7 +44,8 @@
     ([C-M-f10] . grails-find-integration-test-for-current)
     ([C-f11] . grails-run-unit-test-for-current)
     ([C-M-f11] . grails-run-integration-test-for-current)
-    ([C-f12] . grails-rerun-last-test))
+    ([C-f12] . grails-run-last-test)
+    ([C-M-f12] . grails-rerun-last-test))
   :group 'grails)
 
 (defface grails-test-failed
@@ -136,6 +137,17 @@
   (project-ensure-current)
   (grails-run-test-for (grails-app-base-dir-for-file (buffer-file-name))
                        (buffer-file-name) "integration" nil))
+
+(defun grails-run-last-test nil
+  (interactive)
+  (project-ensure-current)
+  (let ((args (grails-project-get-last-test)))
+    (if (> (length args) 0)
+        (grails-run-test-for (second (assoc :base-dir args))
+                             (second (assoc :file args))
+                             (second (assoc :test-phase args))
+                             nil)
+      (message (concat "There was no previous test run for project `" (project-current-name) "'")))))
 
 (defun grails-rerun-last-test nil
   (interactive)
@@ -370,6 +382,11 @@
           global-map
           [menu-bar grailmenu domain]
           '("Find Domain" . grails-find-domain))
+
+        (define-key
+          global-map
+          [menu-bar grailmenu runtest]
+          '("Run Last Test" . grails-run-last-test))
 
         (define-key
           global-map
