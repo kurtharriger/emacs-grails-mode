@@ -124,7 +124,7 @@
   (let ((file (grails-find-test-file-for (buffer-file-name) "integration")))
     (if file
         (find-file file)
-      (message (concat "Could not find unit test for: " (buffer-file-name))))))
+      (message (concat "Could not find integration test for: " (buffer-file-name))))))
 
 (defun grails-run-unit-test-for-current nil
   (interactive)
@@ -272,7 +272,7 @@
         (insert-button file 'action (lambda (but)
                                       (find-file (project-append-to-path
                                                   (grails-tests-plain-output-dir) (button-label but)))))
-        (when (and (string-match "Tests\\.txt$" file))
+        (when (and (string-match "Tests?\\.txt$" file))
           (insert-file (project-append-to-path (grails-tests-plain-output-dir) file))))
       (insert "\n-----\n"))))
 
