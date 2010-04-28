@@ -187,6 +187,12 @@
               (string-match "\\(Service\\.groovy\\|Controller\\.groovy\\|UnitTests?\\.groovy\\|IntegrationTests?\\.groovy\\|Tests?\\.groovy\\|\\.groovy\\)"
                             file-name))))
 
+(defun grails-core-name-for-test-file (file-name)
+  (project-file-basename
+   (substring file-name 0
+              (string-match "\\(UnitTests?\\.groovy\\|IntegrationTests?\\.groovy\\|Tests?\\.groovy\\|\\.groovy\\)"
+                            file-name))))
+
 (defun grails-find-domain-for (file-arg)
   (let ((file-name (concat (grails-core-name-for-file file-arg) ".groovy")))
     (if (not (project-exact-search file-name))
@@ -206,7 +212,7 @@
       (message (concat "Found controller: " file-name)))))
 
 (defun grails-find-test-file-for (file-arg test-phase)
-  (let ((core-name (grails-core-name-for-file file-arg)))
+  (let ((core-name (grails-core-name-for-test-file file-arg)))
     (dolist (file (project-path-cache-get (project-current)))
       (when (and (string-equal core-name (grails-core-name-for-file file))
                  (project-dir-in-file-path-p file test-phase))
