@@ -345,7 +345,7 @@
       (let (matches)
         (dolist (file (project-path-cache-get (project-current)))
           (when (and (or (not (string-match "Tests?\\.groovy$" file))
-                         (equal (second (assoc :file (grails-project-get-last-test)) file)))
+                         (equal (second (assoc :file (grails-project-get-last-test))) file))
                      (string-match (concat "[/\\\\]" file-name) file))
             (setq matches (append matches (list file)))))
         (when (and matches (file-readable-p (car matches)))
