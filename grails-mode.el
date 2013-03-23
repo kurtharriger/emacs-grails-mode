@@ -7,6 +7,11 @@
 ;;   Help when working with grails apps.
 ;;   * Finding files is greatly simplified (see key bindings)
 ;;
+;; revisions: 
+;; 23-Mar-2012 - sfw - Relative to TODO below, for VIEWS the
+;;   associated domain name is the capitlized parent directory name.
+;;   grails-core-name-for-file now handles this case
+;; 
 ;; TODO:
 ;; - Lots of logic queues off of buffer name, but if buffer name is different
 ;;   because, perhaps, the user has the full path of the file as the buffer name
@@ -36,10 +41,10 @@
     ("\M-+gc" . grails-find-controller)
     ("\M-+gs" . grails-find-service)
     ("\M-+gf" . grails-find-file-for-stacktrace-line)
-    ([C-f6] . grails-find-domain-for-current)
-    ([C-f7] . grails-find-controller-for-current)
-    ([C-f8] . grails-find-view-for-controller-action)
-    ([C-f9] . grails-find-service-for-current)
+    ("\M-gd" . grails-find-domain-for-current)
+    ("\M-gc" . grails-find-controller-for-current)
+    ("\M-gv" . grails-find-view-for-controller-action)
+    ("\M-gs" . grails-find-service-for-current)
     ([C-f10] . grails-find-unit-test-for-current)
     ([C-M-f10] . grails-find-integration-test-for-current)
     ([C-f11] . grails-run-unit-test-for-current)
@@ -183,9 +188,12 @@
 
 (defun grails-core-name-for-file (file-name)
   (project-file-basename
-   (substring file-name 0
-              (string-match "\\(Service\\.groovy\\|Controller\\.groovy\\|UnitTests?\\.groovy\\|IntegrationTests?\\.groovy\\|Tests?\\.groovy\\|\\.groovy\\)"
-                            file-name))))
+   (if (string-match "/views/" file-name)
+       (capitalize (cadr (reverse (split-string (buffer-file-name) "/"))))
+       (substring file-name 0
+                  (string-match "\\(Service\\.groovy\\|Controller\\.groovy\\|UnitTests?\\.groovy\\|IntegrationTests?\\.groovy\\|Tests?\\.groovy\\|\\.groovy\\)"
+                                file-name))
+       )))
 
 (defun grails-core-name-for-test-file (file-name)
   (project-file-basename
